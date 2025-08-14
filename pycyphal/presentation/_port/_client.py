@@ -11,6 +11,7 @@ import pycyphal.transport
 from ._base import T, ServicePort, PortFinalizer, OutgoingTransferIDCounter, Closable
 from ._base import DEFAULT_PRIORITY, DEFAULT_SERVICE_REQUEST_TIMEOUT
 from ._error import PortClosedError, RequestTransferIDVariabilityExhaustedError
+import nunavut_support
 
 
 # Shouldn't be too large as this value defines how quickly the task will detect that the underlying transport is closed.
@@ -392,8 +393,6 @@ class ClientImpl(Closable, Generic[T]):
                 pass
 
     def __repr__(self) -> str:
-        import nunavut_support
-
         return pycyphal.util.repr_attributes_noexcept(
             self,
             dtype=str(nunavut_support.get_dsdl_name(self.dtype)),
