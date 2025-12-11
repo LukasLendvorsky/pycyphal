@@ -3,12 +3,11 @@
 # Author: Pavel Kirienko <pavel@opencyphal.org>
 
 from __future__ import annotations
-from typing import Union, Iterable, List, Any, Optional, no_type_check
-from numpy.typing import NDArray
-from nunavut_support import get_attribute
+from typing import Union, Iterable, List, Any, Optional, cast, no_type_check
+from nunavut_support import get_attribute, get_array_capacity
 import pycyphal
 from .backend import Value as Value
-from . import String, Unstructured, Bit
+from . import String, Unstructured, Bit, Empty
 from . import Integer8, Integer16, Integer32, Integer64
 from . import Natural8, Natural16, Natural32, Natural64
 from . import Real16, Real32, Real64
@@ -111,9 +110,7 @@ class ValueProxy:
 
         :raises: :class:`ValueConversionError` if the conversion is impossible or ambiguous.
         """
-        from copy import copy
-
-        self._value = copy(_strictify(v))
+        self._value = _strictify(v)
 
     @property
     def value(self) -> Value:
@@ -216,9 +213,9 @@ class ValueProxy:
         if v.empty:
             return ""
         if v.string:
-            return str(v.string.value.tobytes().decode("utf8"))
+            return str(v.string.value.decode("utf8"))
         if v.unstructured:
-            return str(v.unstructured.value.tobytes().decode("utf8", "ignore"))
+            return str(v.unstructured.value.decode("utf8", "ignore"))
         raise ValueConversionError(f"{v!r} cannot be converted to string")
 
     def __bytes__(self) -> bytes:
@@ -226,9 +223,9 @@ class ValueProxy:
         if v.empty:
             return b""
         if v.string:
-            return bytes(v.string.value.tobytes())
+            return bytes(v.string.value)
         if v.unstructured:
-            return bytes(v.unstructured.value.tobytes())
+            return bytes(v.unstructured.value)
         raise ValueConversionError(f"{v!r} cannot be converted to bytes")
 
     def __repr__(self) -> str:
@@ -264,7 +261,6 @@ RelaxedValue = Union[
     Iterable[bool],
     Iterable[int],
     Iterable[float],
-    NDArray[Any],
 ]
 """
 These types can be automatically converted to :class:`Value` with a particular option selected.
@@ -288,14 +284,13 @@ def _do_convert(to: Value, s: Value) -> Optional[Value]:
     if s.string or s.unstructured or to.string or to.unstructured:
         return None
 
-    val_s: NDArray[Any] = get_attribute(
+    val_s: list[Any] = get_attribute(
         s,
         _get_option_name(s),
-    ).value.copy()
-    val_s.resize(
-        get_attribute(to, _get_option_name(to)).value.size,
-        refcheck=False,
-    )
+    ).value
+    new_size = len(get_attribute(to, _get_option_name(to)).value)
+    val_s = [val_s[idx] if idx < len(val_s) else 0 for idx in range(new_size)]
+
     # At this point it is known that both values are of the same dimension.
     # fmt: off
     if to.bit:    return Value(bit=Bit([x != 0 for x in val_s]))
@@ -346,8 +341,9 @@ def _strictify(s: RelaxedValue) -> Value:
 
     s = list(s)
     if not s:
-        return Value()  # Empty list generalized into Value.empty.
+        return Value(empty=Empty())  # Empty list generalized into Value.empty.
     if all(isinstance(x, bool) for x in s):
+        s = cast(List[bool], s)
         return _strictify(Bit(s))
     if all(isinstance(x, (int, bool)) for x in s):
         return _strictify(Natural64(s)) if all(x >= 0 for x in s) else _strictify(Integer64(s))

@@ -11,6 +11,7 @@ import pycyphal.util
 import pycyphal.transport
 from ._base import MessagePort, T, PortFinalizer, Closable
 from ._error import PortClosedError
+import nunavut_support
 
 
 # Shouldn't be too large as this value defines how quickly the task will detect that the underlying transport is closed.
@@ -372,11 +373,9 @@ class SubscriberImpl(Closable, Generic[T]):
             self.close()
 
     def __repr__(self) -> str:
-        import nunavut_support
-
         return pycyphal.util.repr_attributes_noexcept(
             self,
-            dtype=str(nunavut_support.get_model(self.dtype)),
+            dtype=str(nunavut_support.get_dsdl_name(self.dtype)),
             transport_session=self.transport_session,
             deserialization_failure_count=self.deserialization_failure_count,
             listeners=self._listeners,
