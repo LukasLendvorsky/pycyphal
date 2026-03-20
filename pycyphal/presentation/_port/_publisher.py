@@ -127,7 +127,7 @@ class Publisher(MessagePort[T]):
                     _logger.info("%s send timeout", self)
             except Exception as ex:
                 if self._maybe_impl is not None:
-                    _logger.exception("%s deferred publication has failed: %s", self, ex)
+                    pycyphal.util.handle_internal_error(_logger, ex, f"{self} deferred publication has failed")
                 else:
                     _logger.debug(
                         "%s deferred publication has failed but the publisher is already closed", self, exc_info=True

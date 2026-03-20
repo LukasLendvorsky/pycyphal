@@ -246,7 +246,7 @@ class NodeTracker:
             self._cancel_task(node_id)
             del self._offline_timers[node_id]
         except Exception as ex:
-            _logger.exception("Offline timeout handler error for node %s: %s", node_id, ex)
+            pycyphal.util.handle_internal_error(_logger, ex, f"Offline timeout handler error for node {node_id}")
 
     def _cancel_task(self, node_id: int) -> None:
         try:
@@ -305,7 +305,7 @@ class NodeTracker:
             except pycyphal.transport.ResourceClosedError:
                 _logger.debug("GetInfo task for node %s is stopping because the transport is closed.", node_id)
             except Exception as ex:
-                _logger.exception("GetInfo task for node %s has crashed: %s", node_id, ex)
+                pycyphal.util.handle_internal_error(_logger, ex, f"GetInfo task for node {node_id} has crashed")
             del self._info_tasks[node_id]
 
         self._cancel_task(node_id)

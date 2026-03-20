@@ -18,15 +18,20 @@ def set_internal_error_handler(handler: ErrorHandler | None) -> None:
     global _error_handler  # noqa: PLW0603
     _error_handler = handler
 
-def handle_internal_error(logger: logging.Logger, e: Exception) -> None:
+def handle_internal_error(logger: logging.Logger, e: Exception, msg: str = "") -> None:
     """
     Report an internal error: log it via the provided *logger* and invoke the registered error handler.
 
     :param logger: The logger to use for ``logger.exception``.
     :param e: The exception to report.
+    :param msg: Optional context message describing where/why the error occurred.
 
+    The handler receives a wrapper :class:`Exception` whose message is *msg* (if provided)
+    and whose ``__cause__`` is the original exception *e*.
     """
-    logger.exception(e)
+    logger.exception(msg if msg else e)
     if _error_handler is not None:
+        if msg:
+            e.add_note(msg)
         _error_handler(e)
         

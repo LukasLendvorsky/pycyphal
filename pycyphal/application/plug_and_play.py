@@ -173,7 +173,7 @@ class Allocatee:
             _logger.debug("Publishing allocation request %s", msg)
             self._pub.publish_soon(msg)
         except Exception as ex:
-            _logger.exception("Could not send allocation request %s: %s", msg, ex)
+            pycyphal.util.handle_internal_error(_logger, ex, f"Could not send allocation request {msg}")
 
     def _restart_timer(self) -> None:
         t_request = random.random()

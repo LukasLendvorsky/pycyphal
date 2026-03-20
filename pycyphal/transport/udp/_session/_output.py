@@ -132,8 +132,10 @@ class UDPOutputSession(pycyphal.transport.OutputSession):
                     )
                 )
             except Exception as ex:  # pragma: no cover
-                _logger.exception(
-                    "Unhandled exception in the output session feedback handler %s: %s", self._feedback_handler, ex
+                pycyphal.util.handle_internal_error(
+                    _logger,
+                    ex,
+                    f"Unhandled exception in the output session feedback handler {self._feedback_handler}",
                 )
 
         return True

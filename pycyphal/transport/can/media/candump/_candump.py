@@ -223,7 +223,7 @@ class CandumpMedia(Media):
             loop.call_soon_threadsafe(forward, batch)
         except BaseException as ex:  # pylint: disable=broad-except
             if not self._is_closed:
-                _logger.exception("%r: Log file reader failed: %s", self, ex)
+                pycyphal.util.handle_internal_error(_logger, ex, f"{self!r}: Log file reader failed")
         _logger.debug("%r: Reader thread exiting, bye bye", self)
         self._f.close()
         # FIXME: this should be addressed properly as part of https://github.com/OpenCyphal/pycyphal/issues/227

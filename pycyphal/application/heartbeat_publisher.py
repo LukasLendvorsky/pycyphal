@@ -210,7 +210,7 @@ class HeartbeatPublisher:
                     ):
                         _logger.debug("%s publisher task will exit: %s", self, ex)
                         break
-                    _logger.exception("%s publisher task exception: %s", self, ex)
+                    pycyphal.util.handle_internal_error(_logger, ex, f"{self} publisher task exception")
 
                 next_heartbeat_at += self._period
                 await asyncio.sleep(next_heartbeat_at - time.monotonic())

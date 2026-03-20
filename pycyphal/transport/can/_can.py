@@ -10,6 +10,7 @@ import asyncio
 import logging
 import warnings
 import dataclasses
+import pycyphal.util
 import pycyphal.transport
 from pycyphal.transport import Timestamp
 from .media import Media, Envelope, optimize_filter_configurations, FilterConfiguration, FrameFormat
@@ -422,7 +423,7 @@ class CANTransport(pycyphal.transport.Transport):
                         self._handle_any_frame(timestamp, cid, ufr, loopback=envelope.loopback)
             except Exception as ex:  # pragma: no cover
                 self._frame_stats.in_frames_errored += 1
-                _logger.exception("%s: Error while processing received %s: %s", self, envelope, ex)
+                pycyphal.util.handle_internal_error(_logger, ex, f"{self}: Error while processing received {envelope}")
 
         if self._capture_handlers:  # When capture is enabled, we force loopback for all outgoing frames.
             broadcast = pycyphal.util.broadcast(self._capture_handlers)

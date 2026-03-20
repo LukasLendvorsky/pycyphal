@@ -179,7 +179,7 @@ class UDPInputSession(pycyphal.transport.InputSession):
                         _logger.critical("%s: Stopping because: %s", self, ex, exc_info=True)
                         break
             except Exception as ex:
-                _logger.exception("%s: Exception while consuming UDP frames: %s", self, ex)
+                pycyphal.util.handle_internal_error(_logger, ex, f"{self}: Exception while consuming UDP frames")
 
     @property
     def transfer_id_timeout(self) -> float:

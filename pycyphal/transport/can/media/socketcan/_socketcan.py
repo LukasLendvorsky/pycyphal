@@ -17,6 +17,7 @@ import warnings
 import threading
 import contextlib
 import pathlib
+import pycyphal.util
 import pycyphal.transport
 from pycyphal.transport import Timestamp
 from pycyphal.transport.can.media import Media, Envelope, FilterConfiguration, FrameFormat
@@ -226,7 +227,7 @@ class SocketCANMedia(Media):
                 if not self._closed:  # Don't call after closure to prevent race conditions and use-after-close.
                     handler(frs)
             except Exception as exc:
-                _logger.exception("%s: Unhandled exception in the receive handler: %s; lost frames: %s", self, exc, frs)
+                pycyphal.util.handle_internal_error(_logger, exc, f"{self}: Unhandled exception in the receive handler; lost frames: {frs}")
 
         def error_handler_wrapper(errors: _TimestampedErrorList) -> None:
             try:
@@ -235,9 +236,7 @@ class SocketCANMedia(Media):
                     for error in errors.errors:
                         error_handler(errors.timestamp, error)
             except Exception as exc:
-                _logger.exception(
-                    "%s: Unhandled exception in the receive error handler: %s; lost error: %s", self, exc, errors
-                )
+                pycyphal.util.handle_internal_error(_logger, exc, f"{self}: Unhandled exception in the receive error handler; lost error: {errors}")
 
         while not self._closed and not loop.is_closed():
             try:
@@ -280,7 +279,7 @@ class SocketCANMedia(Media):
                     or (isinstance(ex, OSError) and ex.errno in self._errno_unrecoverable)
                 ):
                     self._closed = True
-                _logger.exception("%s thread failure: %s", self, ex)
+                pycyphal.util.handle_internal_error(_logger, ex, f"{self} thread failure")
                 time.sleep(1)  # Is this an adequate failure management strategy?
 
         self._closed = True
