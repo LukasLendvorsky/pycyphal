@@ -1,0 +1,32 @@
+from __future__ import annotations
+
+import logging
+import typing
+
+ErrorHandler = typing.Callable[[Exception], None]
+
+_error_handler: ErrorHandler | None = None
+
+def set_internal_error_handler(handler: ErrorHandler | None) -> None:
+    """
+    Register a callback that will be invoked whenever an internal pycyphal component encounters
+    an exception somewhere in background asyncio tasks.
+
+    This is useful to be notified when something goes wrong while receiving messages in the background etc.
+    
+    """
+    global _error_handler  # noqa: PLW0603
+    _error_handler = handler
+
+def handle_internal_error(logger: logging.Logger, e: Exception) -> None:
+    """
+    Report an internal error: log it via the provided *logger* and invoke the registered error handler.
+
+    :param logger: The logger to use for ``logger.exception``.
+    :param e: The exception to report.
+
+    """
+    logger.exception(e)
+    if _error_handler is not None:
+        _error_handler(e)
+        
